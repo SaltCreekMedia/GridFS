@@ -1,15 +1,46 @@
 <?php 
-
 class Gridfs {
 
     public $MongoObject;
 
-    public function __construct() {
+    public function __construct($db = 'multi') {
         $this->MongoObject = new Object();
-        $this->MongoObject->client = new MongoClient("mongodb://69.64.76.11:37017");
-        $this->MongoObject->db = $this->MongoObject->client->selectDB('multi');
+        $this->MongoObject->client = new MongoClient("mongodb://64.150.189.132:37017");
+        $this->MongoObject->db = $this->MongoObject->client->selectDB($db);
     }
 
+
+    public function renderImage($id = null,$prefix = null){
+	    $grid = $this->MongoObject->db->getGridFS($prefix);                    // Initialize GridFS
+	    $id = (gettype($id) == 'object') ? $id : new MongoId($id);
+	    $file = $grid->get($id);
+	    //header('Content-type: '.$file->file['contentType']);
+	    header('Content-type: image/jpeg;');
+	    $imageFile = $file->getBytes(); 
+
+	    header('Content-type: image/jpeg');
+	    header("Content-Length: " . strlen($imageFile));
+	    ob_clean();
+	    echo $imageFile;
+	    exit(0);
+    }
+
+    /**
+     * Works, but needs to be fleshed out more and pointers and what not
+     * need to be defined.
+     */
+    public function render($id = null){
+        $grid = $this->MongoObject->db->getGridFS('purls');                    // Initialize GridFS
+        $id = (gettype($id) == 'object') ? $id : new MongoId($id);
+        $file = $grid->get($id);
+
+        header('Content-Type: '.$file->file["contentType"]);
+        //header('Content-Disposition: attachment; filename='.$file->file['filename']); 
+        echo $file->getBytes(); 
+
+        exit(0);
+
+    }
     public function readFile($collection = null,$id = null){
         $grid = $this->MongoObject->db->getGridFS($collection);
         $file = $grid->get($id);
@@ -17,8 +48,8 @@ class Gridfs {
         return $file->getBytes();
     }
 
-    public function uploadFiles($files = array()){
-        $grid = $this->MongoObject->db->getGridFS('uploads');                    // Initialize GridFS
+    public function uploadFiles($files = array(),$prefix = 'uploads'){
+        $grid = $this->MongoObject->db->getGridFS($prefix);                    // Initialize GridFS
 
         $file_ids = array();
         foreach($files as $key => $file){
@@ -62,6 +93,7 @@ class Gridfs {
         }
         else {
            header('Content-Type: '.$file->file["contentType"]);
+           header('Content-Disposition: attachment; filename='.$file->file['name']); 
            echo $file->getBytes(); 
         }   
 
@@ -141,4 +173,18 @@ class GridfsCsv extends Gridfs {
     }
 
 }
+class GridfsPurl extends Gridfs{
+    public function uploadSingleFile($file = null){
+        $grid = $this->MongoObject->db->getGridFS('purls');
+        $name = $file['name'];        // Get Uploaded file name
+        $tmp_name = $file['tmp_name'];        // Get Uploaded file name
+        $type = $file['type'];        // Try to get file extension
+        $id = $grid->storeFile($tmp_name,array("filename" => $name,"contentType" => $type, "aliases" => null, "metadata" => null));    // Store uploaded file to GridFS
+        unlink($tmp_name);
+        return $id->__toString();
+    }
+
+}
+
 ?>
+
