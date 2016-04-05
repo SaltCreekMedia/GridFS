@@ -70,19 +70,23 @@ class Gridfs {
 
             $file_ids[$key]['id'] = $id;
             $file_ids[$key]['name'] = $name;
-            $file_ids[$key]['data_type'] = $file['data_type'];
+            if(isset($file['data_type'])){
+                $file_ids[$key]['data_type'] = $file['data_type'];
+            }else{
+                $file_ids[$key]['data_type'] = 'attachment';
+            }
         }
 
         return $file_ids;
     }
 
-    public function downloadFile($id=null,$displayName){
-        $grid = $this->MongoObject->db->getGridFS('uploads');                    // Initialize GridFS
+    public function downloadFile($id=null,$prefix='uploads'){
+        $grid = $this->MongoObject->db->getGridFS($prefix);                    // Initialize GridFS
 
         $id = (gettype($id) == 'object') ? $id : new MongoId($id);
         $file = $grid->get($id);
 
-        if ( (substr($this->file['name'],-3) == 'zip') || (substr($this->file['name'],-3) == 'pdf') ) {
+        if ( (substr($file->file['filename'],-3) == 'zip') || (substr($file->file['filename'],-3) == 'pdf') ) {
            /* Any file types you want to be downloaded can be listed in this */
            header('Content-Type: application/octet-stream');
            header('Content-Disposition: attachment; filename='.$file->file['name']); 
@@ -94,11 +98,18 @@ class Gridfs {
         }
         else {
            header('Content-Type: '.$file->file["contentType"]);
-           header('Content-Disposition: attachment; filename='.$file->file['name']); 
+           header('Content-Disposition: attachment; filename='.$file->file['filename']); 
+           ob_clean();
            echo $file->getBytes(); 
         }   
 
         exit(0);
+    }
+
+    public function removeFile($id=null,$prefix='uploads'){
+        $grid = $this->MongoObject->db->getGridFS($prefix);
+        $id = (gettype($id) == 'object') ? $id : new MongoId($id);
+        $grid->delete($id);
     }
 }
 class GridfsCsv extends Gridfs {
