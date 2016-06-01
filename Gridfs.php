@@ -86,7 +86,7 @@ class Gridfs {
         $id = (gettype($id) == 'object') ? $id : new MongoId($id);
         $file = $grid->get($id);
 
-        if ( (substr($file->file['filename'],-3) == 'zip') || (substr($file->file['filename'],-3) == 'pdf') ) {
+        if ( (substr($file->file['filename'],-3) == 'zip')) { /*|| (substr($file->file['filename'],-3) == 'pdf') ) {*/
            /* Any file types you want to be downloaded can be listed in this */
            header('Content-Type: application/octet-stream');
            header('Content-Disposition: attachment; filename='.$file->file['name']); 
