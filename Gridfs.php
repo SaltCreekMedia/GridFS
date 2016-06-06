@@ -26,6 +26,13 @@ class Gridfs {
 	    exit(0);
     }
 
+    public function getContentType($id = null, $prefix = null) {
+        $grid = $this->MongoObject->db->getGridFs($prefix);
+        $id = (gettype($id) == 'object') ? $id : new MongoId($id);
+        $file = $grid->get($id);
+        return $file->file['contentType'];
+    }
+
     /**
      * Works, but needs to be fleshed out more and pointers and what not
      * need to be defined.
