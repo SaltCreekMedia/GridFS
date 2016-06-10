@@ -113,6 +113,14 @@ class Gridfs {
         exit(0);
     }
 
+    public function writeToTmp($id=null, $prefix='uploads'){
+        $grid = $this->MongoObject->db->getGridFS($prefix);
+        $id = (gettype($id) == 'object') ? $id : new MongoId($id);
+        $file = $grid->get($id);
+        $file->write('/tmp/'.$file->file['filename']);
+        return '/tmp/'.$file->file['filename'];
+    }
+
     public function removeFile($id=null,$prefix='uploads'){
         $grid = $this->MongoObject->db->getGridFS($prefix);
         $id = (gettype($id) == 'object') ? $id : new MongoId($id);
