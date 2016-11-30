@@ -37,8 +37,8 @@ class Gridfs {
      * Works, but needs to be fleshed out more and pointers and what not
      * need to be defined.
      */
-    public function render($id = null){
-        $grid = $this->MongoObject->db->getGridFS('purls');                    // Initialize GridFS
+    public function render($id = null,$fs='purls'){
+        $grid = $this->MongoObject->db->getGridFS($fs);                    // Initialize GridFS
         $id = (gettype($id) == 'object') ? $id : new MongoId($id);
         $file = $grid->get($id);
 
