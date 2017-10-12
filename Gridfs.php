@@ -99,8 +99,9 @@ class Gridfs {
            header('Content-Disposition: attachment; filename='.$file->file['filename']); 
            header('Content-Transfer-Encoding: binary');
            $cursor = $this->MongoObject->db->fs->chunks->find(array("files_id" => $id))->sort(array("n" => 1));
+           ob_clean();
            foreach($cursor as $chunk) {
-              echo $chunk['data']->bin;
+              echo $chunk['data'];
            }
         }
         else {
