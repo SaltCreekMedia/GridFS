@@ -37,7 +37,7 @@ class Gridfs {
      * Works, but needs to be fleshed out more and pointers and what not
      * need to be defined.
      */
-    public function render($id = null,$fs='purls'){
+    public function render($id = null,$fs='records'){
         $grid = $this->MongoObject->db->getGridFS($fs);                    // Initialize GridFS
         $id = (gettype($id) == 'object') ? $id : new MongoId($id);
         $file = $grid->get($id);
@@ -127,91 +127,5 @@ class Gridfs {
         $grid->delete($id);
     }
 }
-class GridfsCsv extends Gridfs {
-
-    protected $file;
-    protected $headers;
-
-    public function __construct($fileId = null){
-        parent::__construct();
-        if(!is_null($fileId)){
-            $fileId = new MongoId($fileId);
-            $this->file = $this->readFile('csv',$fileId);
-        }
-    }
-    /**
-     * @return array()
-     */
-    public function getHeaders($fileId) {
-        if(is_null($this->headers)){
-            $Data = str_getcsv($this->file,"\n","\"");
-            $this->headers = explode(',',$Data[0]);
-        }
-        return $this->headers;
-    }
-    /**
-     * @return SplFixedArray
-     */
-    public function parse($fileId = null) {
-        if(!is_null($fileId)){
-            $this->__construct($fileId);
-        }
-        $Data = str_getcsv($this->file,"\n","\"");
-        foreach($Data as &$Row) $Row = str_getcsv($Row, ","); //parse the items in rows 
-
-        $spl = SplFixedArray::fromArray($Data);
-        return $spl;
-    }
-    public function uploadSingleFile($file = null){
-        $grid = $this->MongoObject->db->getGridFS('csv');
-        $name = $file['name'];        // Get Uploaded file name
-        $tmp_name = $file['tmp_name'];        // Get Uploaded file name
-        $type = $file['type'];        // Try to get file extension
-        $id = $grid->storeFile($tmp_name,array("filename" => $name,"contentType" => $type, "aliases" => null, "metadata" => null));    // Store uploaded file to GridFS
-        unlink($tmp_name);
-        return $id->__toString();
-    }
-
-    public function create($csvArray = array(),$createFileName = null){
-        $fileString = '';
-
-        while($csvArray->offsetExists($csvArray->key())){
-            $fileString .= implode(',',$csvArray->current())."\n";
-            $csvArray->next();
-        }
-        $grid = $this->MongoObject->db->getGridFS('csv');
-        $name = $createFileName;        // Get Uploaded file name
-        $type = 'text/csv';        // Try to get file extension
-        $id = $grid->storeBytes($fileString,array("filename"=>$name,"contentType" => $type, "aliases" => null, "metadata" => null));    // Store uploaded file to GridFS
-        return $id->__toString();
-    }
-
-    public function downloadCSV($id = null){
-        $grid = $this->MongoObject->db->getGridFS('csv');                    // Initialize GridFS
-
-        $id = (gettype($id) == 'object') ? $id : new MongoId($id);
-        $file = $grid->get($id);
-
-        header('Content-Type: '.$file->file["contentType"]);
-        header('Content-Disposition: attachment; filename='.$file->file['filename']); 
-        echo $file->getBytes(); 
-
-        exit(0);
-    }
-
-}
-class GridfsPurl extends Gridfs{
-    public function uploadSingleFile($file = null){
-        $grid = $this->MongoObject->db->getGridFS('purls');
-        $name = $file['name'];        // Get Uploaded file name
-        $tmp_name = $file['tmp_name'];        // Get Uploaded file name
-        $type = $file['type'];        // Try to get file extension
-        $id = $grid->storeFile($tmp_name,array("filename" => $name,"contentType" => $type, "aliases" => null, "metadata" => null));    // Store uploaded file to GridFS
-        unlink($tmp_name);
-        return $id->__toString();
-    }
-
-}
-
 ?>
 
