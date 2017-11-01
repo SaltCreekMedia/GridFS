@@ -96,11 +96,12 @@ class Gridfs {
         if ( (substr($file->file['filename'],-3) == 'zip')) { /*|| (substr($file->file['filename'],-3) == 'pdf') ) {*/
            /* Any file types you want to be downloaded can be listed in this */
            header('Content-Type: application/octet-stream');
-           header('Content-Disposition: attachment; filename='.$file->file['name']); 
+           header('Content-Disposition: attachment; filename='.$file->file['filename']); 
            header('Content-Transfer-Encoding: binary');
            $cursor = $this->MongoObject->db->fs->chunks->find(array("files_id" => $id))->sort(array("n" => 1));
+           ob_clean();
            foreach($cursor as $chunk) {
-              echo $chunk['data']->bin;
+              echo $chunk['data'];
            }
         }
         else {
